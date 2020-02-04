@@ -8,6 +8,8 @@ import (
 	"bytes"
 	"os"
 	"path/filepath"
+	"std/context"
+	"std/time"
 	"testing"
 )
 
@@ -18,6 +20,27 @@ func checkSize(t *testing.T, path string, size int64) {
 	}
 	if dir.Size() != size {
 		t.Errorf("Stat %q: size %d want %d", path, dir.Size(), size)
+	}
+}
+
+type ioReader struct {
+}
+
+func (i ioReader) Read(p []byte) (n int, err error) {
+	time.Sleep(time.Millisecond * 10)
+	return 0, nil
+}
+
+func TestReadAllCtx(t *testing.T) {
+	reader := ioReader{}
+	ctx, cancel := context.WithCancel(context.Background())
+	go func() {
+		time.Sleep(time.Millisecond * 5)
+		cancel()
+	}()
+	_, err := ReadAllCtx(ctx, reader)
+	if err == nil {
+		t.Fatalf("ReadAllCtx: error expected, none found")
 	}
 }
 

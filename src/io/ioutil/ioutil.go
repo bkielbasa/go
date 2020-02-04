@@ -7,9 +7,11 @@ package ioutil
 
 import (
 	"bytes"
+	"context"
 	"io"
 	"os"
 	"sort"
+	"std/fmt"
 	"sync"
 )
 
@@ -35,6 +37,22 @@ func readAll(r io.Reader, capacity int64) (b []byte, err error) {
 	}
 	_, err = buf.ReadFrom(r)
 	return buf.Bytes(), err
+}
+
+func ReadAllCtx(ctx context.Context, r io.Reader) ([]byte, error) {
+	ch := make(chan struct{})
+	var data []byte
+	var err error
+	go func() {
+		data, err = ReadAll(r)
+		ch <- struct{}{}
+	}()
+	select {
+	case <-ch:
+		return data, err
+	case <-ctx.Done():
+		return nil, fmt.Errorf("err")
+	}
 }
 
 // ReadAll reads from r until an error or EOF and returns the data it read.
