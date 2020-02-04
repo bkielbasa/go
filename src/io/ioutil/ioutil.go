@@ -11,7 +11,7 @@ import (
 	"io"
 	"os"
 	"sort"
-	"std/fmt"
+	"std/errors"
 	"sync"
 )
 
@@ -51,7 +51,7 @@ func ReadAllCtx(ctx context.Context, r io.Reader) ([]byte, error) {
 	case <-ch:
 		return data, err
 	case <-ctx.Done():
-		return nil, fmt.Errorf("err")
+		return nil, errors.New("i/o timeout")
 	}
 }
 
